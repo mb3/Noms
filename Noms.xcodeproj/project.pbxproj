@@ -384,7 +384,7 @@
 			buildSettings = {
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Noms test 2/Noms-Prefix.pch";
-				INFOPLIST_FILE = "Noms test 2/Noms-Info.plist";
+				INFOPLIST_FILE = "$(SRCROOT)/Noms/Noms-Info.plist";
 				PRODUCT_NAME = Noms;
 				WRAPPER_EXTENSION = app;
 			};
@@ -395,7 +395,7 @@
 			buildSettings = {
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Noms test 2/Noms-Prefix.pch";
-				INFOPLIST_FILE = "Noms test 2/Noms-Info.plist";
+				INFOPLIST_FILE = "$(SRCROOT)/Noms/Noms-Info.plist";
 				PRODUCT_NAME = Noms;
 				WRAPPER_EXTENSION = app;
 			};
