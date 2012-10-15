@@ -8,6 +8,11 @@
 
 #import <UIKit/UIKit.h>
 
-@interface MBViewController : UIViewController
+@interface MBViewController : UIViewController <UITextFieldDelegate, UITableViewDataSource>
+
+@property (strong, nonatomic) IBOutlet UITextField *searchTermsTextField;
+@property (strong, nonatomic) IBOutlet UITextField *cityStateTextField;
+
+- (void)performFactualRestaurantSearch;
 
 @end
