@@ -23,6 +23,9 @@ static NSString *kOAuthKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 - (void)viewDidLoad  {
 	[super viewDidLoad];
 	// Do any additional setup after loading the view, typically from a nib.
+	
+	// XXX test data
+	restaurants = [NSMutableArray arrayWithArray:@[@"one", @"two", @"three", @"fourteen"]];
 }
 
 - (void)didReceiveMemoryWarning  {
@@ -103,6 +106,7 @@ static NSString *kOAuthKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 #pragma mark - NSURLConnectionDelegate methods
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error  {
+	// XXX handle offline internets here
 	UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Connection Failed"
 																									message:[NSString stringWithFormat:@"The error was:\n%@", error]
 																								 delegate:nil
@@ -134,8 +138,14 @@ static NSString *kOAuthKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath  {
-	UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"Cell" forIndexPath:indexPath];
+	static NSString *cellIdentifier = @"Cell";
 	
+	UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:cellIdentifier forIndexPath:indexPath];
+	if (cell == nil)
+		cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:cellIdentifier];
+	
+	cell.textLabel.text = restaurants[[indexPath row]];
+		
 	return cell;
 }
 
@@ -149,6 +159,11 @@ static NSString *kOAuthKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 	return NO;
 }
 
+#pragma mark - UITableViewDelegate methods
+
+- (void)tableView:(UITableView *)tableView didDeselectRowAtIndexPath:(NSIndexPath *)indexPath  {
+	
+}
 
 #pragma mark - UITextViewDelegate methods
 

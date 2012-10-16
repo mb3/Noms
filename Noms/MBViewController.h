@@ -8,7 +8,7 @@
 
 #import <UIKit/UIKit.h>
 
-@interface MBViewController : UIViewController <UITextFieldDelegate, UITableViewDataSource, NSURLConnectionDelegate, NSURLConnectionDataDelegate>
+@interface MBViewController : UIViewController <UITextFieldDelegate, UITableViewDelegate, UITableViewDataSource, NSURLConnectionDelegate, NSURLConnectionDataDelegate>
 
 @property (strong, nonatomic) IBOutlet UITextField *searchTermsTextField;
 @property (strong, nonatomic) IBOutlet UITextField *cityStateTextField;
