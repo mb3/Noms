@@ -8,7 +8,7 @@
 
 #import "MBViewController.h"
 
-#define OAUTH_KEY @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId"
+static NSString *kOAuthKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 
 @interface MBViewController ()  {
 	NSMutableArray *restaurants;
@@ -37,7 +37,8 @@
 	NSLog(@"Got some text, %@ and %@", self.cityStateTextField.text, self.searchTermsTextField.text);
 	
 	// String processing for city, state location. First, try comma separators...
-	NSString *locality, *region;
+	NSMutableString *locality = [NSMutableString stringWithFormat:@""];
+	NSString *region = @"";
 	NSArray *locationComponents = [self.cityStateTextField.text componentsSeparatedByString:@", "];
 	// ...if there aren't any, try spaces...
 	if (locationComponents.count < 2) {
@@ -49,14 +50,24 @@
 			region = locationComponents[locationComponents.count - 1];  // ...last string component from the end is the "region". This will not pick up multi-word states ("New Mexico") properly...
 			//locality = [locality mutableCopy];
 			for (int i=0; i < locationComponents.count - 1; i++) {
-				locality = [NSString stringWithFormat:@"%@ %@", locality, locationComponents[i]];
+				[locality appendFormat:@"%@ %@", locality, locationComponents[i]];
 				NSLog(@"Locality is now %@", locality);
 			}
 		}
-	}	
+	} else {
+		locality = locationComponents[0];
+		region = locationComponents[1];
+	}
 	
-	NSString *requestString = [NSString stringWithFormat:@"http://api.v3.factual.com/t/restaurants-us?q=%@&filters={\"region\":\"%@\",\"locality\":\"%@\"}&KEY=%@", self.searchTermsTextField.text, region, locality, OAUTH_KEY];
-	NSData *jsonData = [NSData dataWithContentsOfURL:[NSURL URLWithString:requestString]];
+	NSLog(@"Locality = %@, Region = %@", locality, region);
+	
+	NSString *requestString = [NSString stringWithFormat:@"http://api.v3.factual.com/t/restaurants-us?q=%@&filters=%%7B%%22region%%22%%3A%%22%@%%22%%2C%%22locality%%22%%3A%%22%@%%22%%7D&KEY=%@", self.searchTermsTextField.text, region, locality, kOAuthKey];
+	// NSData *jsonData = [NSData dataWithContentsOfURL:[NSURL URLWithString:requestString]];
+	
+	NSURLRequest *request = [NSURLRequest requestWithURL:[NSURL URLWithString:requestString]];
+	self.connection = [NSURLConnection connectionWithRequest:request delegate:self];
+	
+	self.jsonData = [NSMutableData data];
 	
 	
 	/* http://blogs.captechconsulting.com/blog/nathan-jones/getting-started-json-ios5 */
@@ -80,13 +91,36 @@
 	*/
 	
 	NSLog(@"Request string was: %@", requestString);
-	NSLog(@"Got some data: %@", jsonData);
-	
-	//NSURLRequest *request = [NSURLRequest requestWithURL:[NSURL URLWithString:requestString]];
-
+	//NSLog(@"Got some data: %@", jsonData);
 }
 
-#pragma mark - UITableViewDelegate methods
+- (void)parseJSON  {
+	NSError *parseError = nil;
+	NSDictionary *factualResponse = [NSJSONSerialization JSONObjectWithData:self.jsonData options:0 error:&parseError];
+	NSLog(@"JSON -> NSDictionary: %@", factualResponse);
+}
+
+#pragma mark - NSURLConnectionDelegate methods
+
+- (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error  {
+	UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Connection Failed"
+																									message:[NSString stringWithFormat:@"The error was:\n%@", error]
+																								 delegate:nil
+																				cancelButtonTitle:@"Dismiss"
+																				otherButtonTitles:nil];
+	[alert show];
+}
+
+#pragma mark - NSURLConnectionDataDelegate methods
+
+- (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data  {
+	[self.jsonData appendData:data];
+}
+
+- (void)connectionDidFinishLoading:(NSURLConnection *)connection  {
+	NSLog(@"I has a JSON: %@", self.jsonData);
+	[self parseJSON];
+}
 
 
 #pragma mark - UITableViewDataSource methods

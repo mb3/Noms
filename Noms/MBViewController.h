@@ -8,11 +8,15 @@
 
 #import <UIKit/UIKit.h>
 
-@interface MBViewController : UIViewController <UITextFieldDelegate, UITableViewDataSource>
+@interface MBViewController : UIViewController <UITextFieldDelegate, UITableViewDataSource, NSURLConnectionDelegate, NSURLConnectionDataDelegate>
 
 @property (strong, nonatomic) IBOutlet UITextField *searchTermsTextField;
 @property (strong, nonatomic) IBOutlet UITextField *cityStateTextField;
 
 - (void)performFactualRestaurantSearch;
+- (void)parseJSON;
+
+@property (strong, nonatomic) NSURLConnection *connection;
+@property (strong, nonatomic) NSMutableData *jsonData;
 
 @end
