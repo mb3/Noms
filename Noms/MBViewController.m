@@ -36,14 +36,33 @@
 	
 	NSLog(@"Got some text, %@ and %@", self.cityStateTextField.text, self.searchTermsTextField.text);
 	
+	// String processing for city, state location. First, try comma separators...
+	NSString *locality, *region;
 	NSArray *locationComponents = [self.cityStateTextField.text componentsSeparatedByString:@", "];
+	// ...if there aren't any, try spaces...
+	if (locationComponents.count < 2) {
+		locationComponents = [self.cityStateTextField.text componentsSeparatedByString:@" "];
+		// ...if still not, just send the single string as "locality"...
+		if (locationComponents.count < 2) {
+			locality = locationComponents[0];
+		} else if (locationComponents.count > 2) {  // ...otherwise, check for multiple spaces (multiple-word cities)...
+			region = locationComponents[locationComponents.count - 1];  // ...last string component from the end is the "region". This will not pick up multi-word states ("New Mexico") properly...
+			//locality = [locality mutableCopy];
+			for (int i=0; i < locationComponents.count - 1; i++) {
+				locality = [NSString stringWithFormat:@"%@ %@", locality, locationComponents[i]];
+				NSLog(@"Locality is now %@", locality);
+			}
+		}
+	}	
 	
-	NSString *requestString = [NSString stringWithFormat:@"http://api.v3.factual.com/t/restaurants-us?q=%@&filters={\"region\":\"%@\",\"locality\":\"%@\"}&KEY=%@", self.searchTermsTextField.text, locationComponents[1], locationComponents[0], OAUTH_KEY];
+	NSString *requestString = [NSString stringWithFormat:@"http://api.v3.factual.com/t/restaurants-us?q=%@&filters={\"region\":\"%@\",\"locality\":\"%@\"}&KEY=%@", self.searchTermsTextField.text, region, locality, OAUTH_KEY];
 	NSData *jsonData = [NSData dataWithContentsOfURL:[NSURL URLWithString:requestString]];
 	
 	
 	/* http://blogs.captechconsulting.com/blog/nathan-jones/getting-started-json-ios5 */
-	 
+	
+	// Need to handle being offline here as well
+	/*
 	NSInputStream *jsonStream = [[NSInputStream alloc] initWithData:jsonData];
 	[jsonStream open];
 	
@@ -58,6 +77,7 @@
 			NSLog(@"Failed to open stream.");
 		}
 	}
+	*/
 	
 	NSLog(@"Request string was: %@", requestString);
 	NSLog(@"Got some data: %@", jsonData);
