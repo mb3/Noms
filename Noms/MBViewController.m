@@ -8,11 +8,11 @@
 
 #import "MBViewController.h"
 #import "MBDetailViewController.h"
+#import "MBFactualRestaurant.h"
 
 static NSString *kOAuthKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 
 @interface MBViewController () {
-	NSMutableArray *restaurants;
 }
 
 @end
@@ -25,8 +25,6 @@ static NSString *kOAuthKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 	[super viewDidLoad];
 	// Do any additional setup after loading the view, typically from a nib.
 	
-	// XXX test data
-	restaurants = [NSMutableArray arrayWithArray:@[@"one", @"two", @"three", @"fourteen"]];
 }
 
 - (void)didReceiveMemoryWarning  {
@@ -65,36 +63,33 @@ static NSString *kOAuthKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 	
 	NSLog(@"Locality = %@, Region = %@", locality, region);
 	
-	NSString *requestString = [NSString stringWithFormat:@"http://api.v3.factual.com/t/restaurants-us?q=%@&filters=%%7B%%22region%%22%%3A%%22%@%%22%%2C%%22locality%%22%%3A%%22%@%%22%%7D&KEY=%@", self.searchTermsTextField.text, region, locality, kOAuthKey];
-	// NSData *jsonData = [NSData dataWithContentsOfURL:[NSURL URLWithString:requestString]];
+	// Construct the query URL. This all needs to be properly percent-escaped or NSURL won't take it, hence the multiple parts.
 	
-	NSURLRequest *request = [NSURLRequest requestWithURL:[NSURL URLWithString:requestString]];
+	NSString *requestURLPrefix  = @"http://api.v3.factual.com/t/restaurants-us?";
+	NSString *requestURLQuery   = [NSString stringWithFormat:@"q=%@", self.searchTermsTextField.text];
+	NSString *requestURLFilters = [NSString stringWithFormat:@"filters={\"region\":\"%@\",\"locality\":\"%@\"}", region, locality];
+	
+	//NSString *requestString = [NSString stringWithFormat:@"http://api.v3.factual.com/t/restaurants-us?q=%@&filters={\"region\":\"%@\",\"locality\":\"%@\"}&KEY=%@", self.searchTermsTextField.text, region, locality, kOAuthKey];
+	CFStringRef requestURLQueryEncoded = CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault,
+																																						   (__bridge CFStringRef)(requestURLQuery),
+																																							 NULL,
+																																						   CFSTR(":/?#[]@!$&'()*+.,;="),
+																																						   kCFStringEncodingUTF8);
+	CFStringRef requestURLFiltersEncoded = CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault,
+																																								 (__bridge CFStringRef)(requestURLFilters),
+																																								 NULL,
+																																								 CFSTR(":/?#[]@!$&'()*+.,;="),
+																																								 kCFStringEncodingUTF8);
+	NSString *requestStringEncoded = [NSString stringWithFormat:@"%@%@&%@&KEY=%@", requestURLPrefix, (__bridge NSString *)(requestURLQueryEncoded), (__bridge NSString *)(requestURLFiltersEncoded), kOAuthKey];
+	
+	//NSString *requestString = [NSString stringWithFormat:@"http://api.v3.factual.com/t/restaurants-us?q=%@&filters=%%7B%%22region%%22%%3A%%22%@%%22%%2C%%22locality%%22%%3A%%22%@%%22%%7D&KEY=%@", self.searchTermsTextField.text, region, locality, kOAuthKey];
+	
+	NSURLRequest *request = [NSURLRequest requestWithURL:[NSURL URLWithString:requestStringEncoded]];
 	self.connection = [NSURLConnection connectionWithRequest:request delegate:self];
 	
 	self.jsonData = [NSMutableData data];
 	
-	
-	/* http://blogs.captechconsulting.com/blog/nathan-jones/getting-started-json-ios5 */
-	
-	// Need to handle being offline here as well
-	/*
-	NSInputStream *jsonStream = [[NSInputStream alloc] initWithData:jsonData];
-	[jsonStream open];
-	
-	if (jsonStream) {
-		NSError *parseError = nil;
-		id jsonObject = [NSJSONSerialization JSONObjectWithStream:jsonStream options:NSJSONReadingAllowFragments error:&parseError];
-		if ([jsonObject respondsToSelector:@selector(objectForKey:)]) {
-			for (NSDictionary *restaurant in [jsonObject objectForKey:@"results"]) {
-				NSLog(@"Result: %@", [restaurant objectForKey:@"text"]);
-			}
-		} else  {
-			NSLog(@"Failed to open stream.");
-		}
-	}
-	*/
-	
-	NSLog(@"Request string was: %@", requestString);
+	NSLog(@"Request string was: %@", requestStringEncoded);
 	//NSLog(@"Got some data: %@", jsonData);
 }
 
@@ -102,6 +97,18 @@ static NSString *kOAuthKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 	NSError *parseError = nil;
 	NSDictionary *factualResponse = [NSJSONSerialization JSONObjectWithData:self.jsonData options:0 error:&parseError];
 	NSLog(@"JSON -> NSDictionary: %@", factualResponse);
+	
+	if (!parseError) {
+		self.restaurants = [[NSMutableArray alloc] initWithCapacity:20];
+		
+		for (NSDictionary *dict in [[factualResponse objectForKey:@"response"] objectForKey:@"data"]) {
+			MBFactualRestaurant *restaurant = [MBFactualRestaurant restaurantFromFactualDictionary:dict];
+			[self.restaurants addObject:restaurant];
+			NSLog(@"Just added %@", restaurant.name);
+		}
+	}
+	
+	[self.tableView reloadData];
 }
 
 #pragma mark - NSURLConnectionDelegate methods
@@ -123,7 +130,7 @@ static NSString *kOAuthKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 }
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection  {
-	NSLog(@"I has a JSON: %@", self.jsonData);
+	//NSLog(@"I has a JSON: %@", self.jsonData);
 	[self parseJSON];
 }
 
@@ -135,7 +142,7 @@ static NSString *kOAuthKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section  {
-	return restaurants.count;
+	return self.restaurants.count;
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath  {
@@ -145,7 +152,7 @@ static NSString *kOAuthKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 	if (cell == nil)
 		cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:cellIdentifier];
 	
-	cell.textLabel.text = restaurants[[indexPath row]];
+	cell.textLabel.text = [(MBFactualRestaurant *)self.restaurants[[indexPath row]] name];
 		
 	return cell;
 }
@@ -173,8 +180,8 @@ static NSString *kOAuthKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender  {
 	if ([[segue identifier] isEqualToString:@"showDetail"]) {
 		NSIndexPath *indexPath = [self.tableView indexPathForSelectedRow];
-		NSString *string = restaurants[indexPath.row];
-		[[segue destinationViewController] setDetailItem:string];
+		MBFactualRestaurant *restaurant = self.restaurants[indexPath.row];
+		[[segue destinationViewController] setRestaurant:restaurant];
 	}
 }
 

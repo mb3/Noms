@@ -7,6 +7,7 @@
 //
 
 #import "MBDetailViewController.h"
+#import "MBFactualRestaurant.h"
 
 @interface MBDetailViewController ()
 - (void)configureView;
@@ -27,6 +28,8 @@
 {
 	[super viewDidLoad];
 	// Do any additional setup after loading the view.
+	
+	self.navItem.title = self.restaurant.name;
 }
 
 - (void)didReceiveMemoryWarning

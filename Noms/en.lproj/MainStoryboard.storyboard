@@ -7,7 +7,6 @@
         <!--Navigation Controller-->
         <scene sceneID="d8W-aW-06Q">
             <objects>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="Uet-fO-kNc" userLabel="First Responder" sceneMemberID="firstResponder"/>
                 <navigationController definesPresentationContext="YES" id="mMe-Yt-woI" sceneMemberID="viewController">
                     <navigationBar key="navigationBar" contentMode="scaleToFill" id="PaA-fW-dk7">
                         <autoresizingMask key="autoresizingMask"/>
@@ -16,6 +15,7 @@
                         <segue destination="2" kind="relationship" relationship="rootViewController" id="Pfl-Wm-2sV"/>
                     </connections>
                 </navigationController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="Uet-fO-kNc" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="-374" y="633"/>
         </scene>
@@ -129,6 +129,9 @@
                         <color key="backgroundColor" name="alternateSelectedControlTextColor" catalog="System" colorSpace="catalog"/>
                     </view>
                     <navigationItem key="navigationItem" title="Restaurant" id="gPp-Zu-7xA"/>
+                    <connections>
+                        <outlet property="navItem" destination="gPp-Zu-7xA" id="lnX-XC-dN5"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="Rp9-Xy-S0Q" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
@@ -138,6 +141,9 @@
     <classes>
         <class className="MBDetailViewController" superclassName="UIViewController">
             <source key="sourceIdentifier" type="project" relativePath="./Classes/MBDetailViewController.h"/>
+            <relationships>
+                <relationship kind="outlet" name="navItem" candidateClass="UINavigationItem"/>
+            </relationships>
         </class>
         <class className="MBViewController" superclassName="UIViewController">
             <source key="sourceIdentifier" type="project" relativePath="./Classes/MBViewController.h"/>

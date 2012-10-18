@@ -21,5 +21,6 @@
 
 @property (strong, nonatomic) NSURLConnection *connection;
 @property (strong, nonatomic) NSMutableData *jsonData;
+@property (strong, nonatomic) NSMutableArray *restaurants;
 
 @end

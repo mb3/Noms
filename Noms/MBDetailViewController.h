@@ -8,8 +8,11 @@
 
 #import <UIKit/UIKit.h>
 
+@class MBFactualRestaurant;
+
 @interface MBDetailViewController : UIViewController
 
-@property (strong, nonatomic) id detailItem;
+@property (strong, nonatomic) IBOutlet UINavigationItem *navItem;
+@property (strong, nonatomic) MBFactualRestaurant *restaurant;
 
 @end
