@@ -9,7 +9,7 @@
 #import "MBDetailViewController.h"
 
 @interface MBDetailViewController ()
-
+- (void)configureView;
 @end
 
 @implementation MBDetailViewController
@@ -33,6 +33,16 @@
 {
 	[super didReceiveMemoryWarning];
 	// Dispose of any resources that can be recreated.
+}
+
+#pragma mark - Instance methods
+
+- (void)setDetailItem:(id)detailItem  {
+	
+}
+
+- (void)configureView  {
+	
 }
 
 @end

@@ -10,4 +10,13 @@
 
 @interface MBFactualRestaurant : NSObject
 
+@property (strong, nonatomic) NSMutableArray *cuisine;
+@property (nonatomic, assign) NSInteger price;
+@property (strong, nonatomic) NSNumber *rating;
+@property (strong, nonatomic) NSMutableDictionary *hours;
+
+@property (nonatomic, assign) BOOL servesBreakfast;
+@property (nonatomic, assign) BOOL servesLunch;
+@property (nonatomic, assign) BOOL servesDinner;
+
 @end

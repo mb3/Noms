@@ -7,10 +7,11 @@
 //
 
 #import "MBViewController.h"
+#import "MBDetailViewController.h"
 
 static NSString *kOAuthKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 
-@interface MBViewController ()  {
+@interface MBViewController () {
 	NSMutableArray *restaurants;
 }
 
@@ -161,8 +162,20 @@ static NSString *kOAuthKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 
 #pragma mark - UITableViewDelegate methods
 
+/*
 - (void)tableView:(UITableView *)tableView didDeselectRowAtIndexPath:(NSIndexPath *)indexPath  {
-	
+	UIStoryboard *storyboard = [UIStoryboard storyboardWithName:@"MainStoryboard" bundle:nil];
+	MBDetailViewController *detailViewController = [storyboard instantiateViewControllerWithIdentifier:@"detailViewController"];
+}
+*/
+#pragma mark - UIViewController override
+
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender  {
+	if ([[segue identifier] isEqualToString:@"showDetail"]) {
+		NSIndexPath *indexPath = [self.tableView indexPathForSelectedRow];
+		NSString *string = restaurants[indexPath.row];
+		[[segue destinationViewController] setDetailItem:string];
+	}
 }
 
 #pragma mark - UITextViewDelegate methods
