@@ -13,6 +13,18 @@
 @interface MBDetailViewController : UIViewController
 
 @property (strong, nonatomic) IBOutlet UINavigationItem *navItem;
+
+@property (strong, nonatomic) IBOutlet UILabel *nameLabel;
+@property (strong, nonatomic) IBOutlet UILabel *cuisineLabel;
+
+@property (strong, nonatomic) IBOutlet UITextView *hoursView;
+
+@property (strong, nonatomic) IBOutlet UIButton *websiteButton;
+@property (strong, nonatomic) IBOutlet UIButton *phoneNumberButton;
+@property (strong, nonatomic) IBOutlet UIButton *addressButton;
+
 @property (strong, nonatomic) MBFactualRestaurant *restaurant;
+
+- (void)dialPhoneNumber;
 
 @end

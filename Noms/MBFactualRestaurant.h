@@ -12,7 +12,7 @@
 
 @property (nonatomic, copy) NSString *name;
 
-@property (strong, nonatomic) NSMutableArray *cuisine;
+@property (nonatomic, copy) NSString *cuisine;
 @property (nonatomic, assign) NSInteger price;
 @property (strong, nonatomic) NSNumber *rating;
 @property (strong, nonatomic) NSMutableDictionary *hours;
@@ -22,12 +22,9 @@
 @property (nonatomic, assign) BOOL servesDinner;
 
 @property (nonatomic, copy) NSString *address;
-@property (nonatomic, copy) NSString *locality;
-@property (nonatomic, copy) NSString *region;
-@property (nonatomic, copy) NSString *country;
-@property (nonatomic, copy) NSString *postcode;
 
 @property (nonatomic, copy) NSString *telephone;
+@property (nonatomic, copy) NSString *website;
 
 + (id)restaurantFromFactualDictionary:(NSDictionary *)dictionary;
 - (id)initFromFactualDictionary:(NSDictionary *)dictionary;

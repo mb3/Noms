@@ -28,6 +28,12 @@
 		[self setServesLunch:[[dictionary objectForKey:@"meal_lunch"] boolValue]];
 		[self setServesDinner:[[dictionary objectForKey:@"meal_dinner"] boolValue]];
 		
+		NSString *combinedAddress = [NSString stringWithFormat:@"%@\n%@, %@ %@", [dictionary objectForKey:@"address"], [dictionary objectForKey:@"locality"], [dictionary objectForKey:@"region"], [dictionary objectForKey:@"postcode"]];
+		[self setAddress:combinedAddress];
+		
+		[self setTelephone:[dictionary objectForKey:@"tel"]];
+		[self setWebsite:[dictionary objectForKey:@"website"]];
+		
 		return self;
 	} else return nil;
 }
