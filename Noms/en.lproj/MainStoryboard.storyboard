@@ -181,6 +181,9 @@ Washington, DC 20005</string>
                                         <state key="highlighted">
                                             <color key="titleColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                         </state>
+                                        <connections>
+                                            <action selector="dialPhoneNumber" destination="wfh-ox-dHR" eventType="touchUpInside" id="b4n-9p-Jq7"/>
+                                        </connections>
                                     </button>
                                     <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" id="GXK-5m-rmh">
                                         <rect key="frame" x="20" y="127" width="280" height="128"/>
@@ -230,6 +233,29 @@ Washington, DC 20005</string>
             <point key="canvasLocation" x="476" y="633"/>
         </scene>
     </scenes>
+    <classes>
+        <class className="MBDetailViewController" superclassName="UIViewController">
+            <source key="sourceIdentifier" type="project" relativePath="./Classes/MBDetailViewController.h"/>
+            <relationships>
+                <relationship kind="action" name="dialPhoneNumber"/>
+                <relationship kind="outlet" name="addressButton" candidateClass="UIButton"/>
+                <relationship kind="outlet" name="cuisineLabel" candidateClass="UILabel"/>
+                <relationship kind="outlet" name="hoursView" candidateClass="UITextView"/>
+                <relationship kind="outlet" name="nameLabel" candidateClass="UILabel"/>
+                <relationship kind="outlet" name="navItem" candidateClass="UINavigationItem"/>
+                <relationship kind="outlet" name="phoneNumberButton" candidateClass="UIButton"/>
+                <relationship kind="outlet" name="websiteButton" candidateClass="UIButton"/>
+            </relationships>
+        </class>
+        <class className="MBViewController" superclassName="UIViewController">
+            <source key="sourceIdentifier" type="project" relativePath="./Classes/MBViewController.h"/>
+            <relationships>
+                <relationship kind="outlet" name="cityStateTextField" candidateClass="UITextField"/>
+                <relationship kind="outlet" name="searchTermsTextField" candidateClass="UITextField"/>
+                <relationship kind="outlet" name="tableView" candidateClass="UITableView"/>
+            </relationships>
+        </class>
+    </classes>
     <simulatedMetricsContainer key="defaultSimulatedMetrics">
         <simulatedStatusBarMetrics key="statusBar"/>
         <simulatedOrientationMetrics key="orientation"/>

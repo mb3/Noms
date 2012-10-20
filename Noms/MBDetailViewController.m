@@ -41,8 +41,6 @@
 	[self.phoneNumberButton setTitle:self.restaurant.telephone forState:(UIControlStateDisabled | UIControlStateHighlighted)];
 	[self.addressButton setTitle:self.restaurant.address forState:UIControlStateNormal];
 	[self.addressButton setTitle:self.restaurant.address forState:(UIControlStateDisabled | UIControlStateHighlighted)];
-
-	NSURL *phoneURL = [NSURL URLWithString:[NSString stringWithFormat:@"tel://%@", self.restaurant.telephone]];
 	//[self.phoneNumberButton sendAction:@selector(dialPhoneNumber) to:self forEvent:]
 }
 
@@ -54,8 +52,9 @@
 
 #pragma mark - Instance methods
 
-- (void)dialPhoneNumber  {
-	
+- (IBAction)dialPhoneNumber  {
+	NSURL *phoneURL = [NSURL URLWithString:[NSString stringWithFormat:@"tel://%@", self.restaurant.telephone]];
+	[[UIApplication sharedApplication] openURL:phoneURL];
 }
 
 - (void)configureView  {

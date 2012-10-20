@@ -36,15 +36,18 @@ static NSString *kOAuthKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 
 - (void)performFactualRestaurantSearch  {
 	
-	NSLog(@"Got some text, %@ and %@", self.cityStateTextField.text, self.searchTermsTextField.text);
+	NSLog(@"XXX Got some text, %@ and %@", self.cityStateTextField.text, self.searchTermsTextField.text);
+	
+	// Strip out periods from the input. Factual doesn't like them, and iOS autocorrects certain things to include periods, e.g. "Washington, D.C.".
+	NSString *cityStateText = [self.cityStateTextField.text stringByReplacingOccurrencesOfString:@"." withString:@""];
 	
 	// String processing for city, state location. First, try comma separators...
-	NSMutableString *locality = [NSMutableString stringWithFormat:@""];
-	NSString *region = @"";
-	NSArray *locationComponents = [self.cityStateTextField.text componentsSeparatedByString:@", "];
+	NSMutableString *locality = [NSMutableString stringWithFormat:@""];  // A nil string will print as "(null)"
+	NSString *region = @"";  // A nil string will print as "(null)"
+	NSArray *locationComponents = [cityStateText componentsSeparatedByString:@", "];
 	// ...if there aren't any, try spaces...
 	if (locationComponents.count < 2) {
-		locationComponents = [self.cityStateTextField.text componentsSeparatedByString:@" "];
+		locationComponents = [cityStateText componentsSeparatedByString:@" "];
 		// ...if still not, just send the single string as "locality"...
 		if (locationComponents.count < 2) {
 			locality = locationComponents[0];
@@ -53,15 +56,18 @@ static NSString *kOAuthKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 			//locality = [locality mutableCopy];
 			for (int i=0; i < locationComponents.count - 1; i++) {
 				[locality appendFormat:@"%@ %@", locality, locationComponents[i]];
-				NSLog(@"Locality is now %@", locality);
+				NSLog(@"XXX Locality is now %@", locality);
 			}
+		}  else {
+			locality = locationComponents[0];
+			region = locationComponents[1];
 		}
 	} else {
 		locality = locationComponents[0];
 		region = locationComponents[1];
 	}
 	
-	NSLog(@"Locality = %@, Region = %@", locality, region);
+	NSLog(@"XXX Locality = %@, Region = %@", locality, region);
 	
 	// Construct the query URL. This all needs to be properly percent-escaped or NSURL won't take it, hence the multiple parts.
 	
@@ -69,7 +75,6 @@ static NSString *kOAuthKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 	NSString *requestURLQuery   = [NSString stringWithFormat:@"q=%@", self.searchTermsTextField.text];
 	NSString *requestURLFilters = [NSString stringWithFormat:@"filters={\"region\":\"%@\",\"locality\":\"%@\"}", region, locality];
 	
-	//NSString *requestString = [NSString stringWithFormat:@"http://api.v3.factual.com/t/restaurants-us?q=%@&filters={\"region\":\"%@\",\"locality\":\"%@\"}&KEY=%@", self.searchTermsTextField.text, region, locality, kOAuthKey];
 	CFStringRef requestURLQueryEncoded = CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault,
 																																						   (__bridge CFStringRef)(requestURLQuery),
 																																							 NULL,
@@ -82,21 +87,19 @@ static NSString *kOAuthKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 																																								 kCFStringEncodingUTF8);
 	NSString *requestStringEncoded = [NSString stringWithFormat:@"%@%@&%@&KEY=%@", requestURLPrefix, (__bridge NSString *)(requestURLQueryEncoded), (__bridge NSString *)(requestURLFiltersEncoded), kOAuthKey];
 	
-	//NSString *requestString = [NSString stringWithFormat:@"http://api.v3.factual.com/t/restaurants-us?q=%@&filters=%%7B%%22region%%22%%3A%%22%@%%22%%2C%%22locality%%22%%3A%%22%@%%22%%7D&KEY=%@", self.searchTermsTextField.text, region, locality, kOAuthKey];
 	
 	NSURLRequest *request = [NSURLRequest requestWithURL:[NSURL URLWithString:requestStringEncoded]];
 	self.connection = [NSURLConnection connectionWithRequest:request delegate:self];
 	
 	self.jsonData = [NSMutableData data];
 	
-	NSLog(@"Request string was: %@", requestStringEncoded);
-	//NSLog(@"Got some data: %@", jsonData);
+	NSLog(@"XXX Request string was: %@", requestStringEncoded);
 }
 
 - (void)parseJSON  {
 	NSError *parseError = nil;
 	NSDictionary *factualResponse = [NSJSONSerialization JSONObjectWithData:self.jsonData options:0 error:&parseError];
-	NSLog(@"JSON -> NSDictionary: %@", factualResponse);
+	NSLog(@"XXX JSON -> NSDictionary: %@", factualResponse);
 	
 	if (!parseError) {
 		self.restaurants = [[NSMutableArray alloc] initWithCapacity:20];
@@ -104,7 +107,7 @@ static NSString *kOAuthKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 		for (NSDictionary *dict in [[factualResponse objectForKey:@"response"] objectForKey:@"data"]) {
 			MBFactualRestaurant *restaurant = [MBFactualRestaurant restaurantFromFactualDictionary:dict];
 			[self.restaurants addObject:restaurant];
-			NSLog(@"Just added %@", restaurant.name);
+			NSLog(@"XXX Just added %@", restaurant.name);
 		}
 	}
 	
@@ -114,13 +117,21 @@ static NSString *kOAuthKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 #pragma mark - NSURLConnectionDelegate methods
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error  {
-	// XXX handle offline internets here
-	UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Connection Failed"
-																									message:[NSString stringWithFormat:@"The error was:\n%@", error]
-																								 delegate:nil
-																				cancelButtonTitle:@"Dismiss"
-																				otherButtonTitles:nil];
-	[alert show];
+	if (error.code == NSURLErrorNotConnectedToInternet) {
+		UIAlertView *notConnectedAlert = [[UIAlertView alloc] initWithTitle:@"Your device is not connected to the internet."
+																																message:nil
+																															 delegate:nil
+																											cancelButtonTitle:@"Dismiss"
+																											otherButtonTitles:nil];
+		[notConnectedAlert show];
+	} else  {
+		UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Connection Failed"
+																										message:[NSString stringWithFormat:@"The error was:\n%@", error]
+																									 delegate:nil
+																					cancelButtonTitle:@"Dismiss"
+																					otherButtonTitles:nil];
+		[alert show];
+	}
 }
 
 #pragma mark - NSURLConnectionDataDelegate methods

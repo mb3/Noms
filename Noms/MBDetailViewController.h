@@ -25,6 +25,6 @@
 
 @property (strong, nonatomic) MBFactualRestaurant *restaurant;
 
-- (void)dialPhoneNumber;
+- (IBAction)dialPhoneNumber;
 
 @end
