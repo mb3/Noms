@@ -37,74 +37,7 @@
 	[super viewDidLoad];
 	// Do any additional setup after loading the view.
 	
-	// Use the header's height to start calculating the total height for the scroll view
-	self.totalHeight = self.headerView.frame.origin.y + self.headerView.frame.size.height;
-	
-	if (self.restaurant.hours) {		
-		NSMutableString *hoursText = [[NSMutableString alloc] init];
-		NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
-		[dateFormatter setTimeStyle:NSDateFormatterShortStyle];
-		NSArray *dayNames = @[@"Monday", @"Tuesday", @"Wednesday", @"Thursday", @"Friday", @"Saturday", @"Sunday"];
-		for (int i = 0; i < dayNames.count; i++) {
-			// Factual's days are 1-indexed, hence the i+1
-			if ([self.restaurant.hours objectForKey:[NSString stringWithFormat:@"%d", i+1]]) {
-				[hoursText appendFormat:@"%@:\n", dayNames[i]];
-				
-				for (NSArray *hourArray	in [self.restaurant.hours objectForKey:[NSString stringWithFormat:@"%d", i+1]]) {
-					NSDate *date1 = [dateFormatter dateFromString:hourArray[0]];
-					NSDate *date2 = [dateFormatter dateFromString:hourArray[1]];
-					[hoursText appendFormat:@"%@ – %@", [dateFormatter stringFromDate:date1], [dateFormatter stringFromDate:date2]];
-					if (hourArray.count > 2) {
-						[hoursText appendFormat:@" — %@", hourArray[2]];  // Some hours have a label like "Lunch" or "Dinner"
-					}
-					[hoursText appendFormat:@"\n"];
-				}
-			}
-		}
-		
-		UILabel *hoursLabel = [[UILabel alloc] init];
-		hoursLabel.backgroundColor = [UIColor clearColor];
-		hoursLabel.text = [NSString stringWithFormat:@"Hours:\n%@", hoursText];
-		hoursLabel.numberOfLines = 0;
-		
-		// Size the label to fit based on the size of the text, then conform to the size of the scroll view
-		[hoursLabel sizeToFit];
-		CGRect frame = hoursLabel.frame;
-		frame.origin = CGPointMake(LEFT_MARGIN, self.totalHeight + PADDING);
-		frame.size = CGSizeMake(WIDTH, hoursLabel.frame.size.height);
-		hoursLabel.frame = frame;
-		
-		hoursLabel.autoresizingMask = UIViewAutoresizingFlexibleWidth;
-		
-		[self.scrollView addSubview:hoursLabel];
-		self.totalHeight += PADDING;
-		self.totalHeight += frame.size.height;
-	}
-	
-	if (self.restaurant.website)  {
-		UIButton *websiteButton = [self buttonWithTitle:self.restaurant.website];
-		[websiteButton addTarget:self action:@selector(openWebsite) forControlEvents:UIControlEventTouchUpInside];
-		[self.scrollView addSubview:websiteButton];
-	}
-	
-	if (self.restaurant.telephone)  {
-		UIButton *phoneButton = [self buttonWithTitle:self.restaurant.telephone];
-		[phoneButton addTarget:self action:@selector(dialPhoneNumber) forControlEvents:UIControlEventTouchUpInside];
-		[self.scrollView addSubview:phoneButton];
-	}
-	
-	if (self.restaurant.address)  {
-		UIButton *addressButton = [self buttonWithTitle:self.restaurant.address];
-		[addressButton addTarget:self action:@selector(openMap) forControlEvents:UIControlEventTouchUpInside];
-		[self.scrollView addSubview:addressButton];
-	}
-		
-	self.nameLabel.text = self.restaurant.name;
-	self.cuisineLabel.text = self.restaurant.cuisine;
-	
-	[self.scrollView setContentSize:CGSizeMake(self.scrollView.frame.size.width, (self.totalHeight + PADDING))];
-	
-	//NSLog(@"XXX scrollView contentSize: (%f, %f)", self.scrollView.contentSize.width, self.scrollView.contentSize.height);
+	[self configureView];
 }
 
 - (void)didReceiveMemoryWarning
@@ -114,6 +47,13 @@
 }
 
 #pragma mark - Instance methods
+
+- (void)setRestaurant:(MBFactualRestaurant *)newRestaurant  {
+	if (self.restaurant != newRestaurant) {
+		self.restaurant = newRestaurant;
+		[self configureView];
+	}
+}
 
 - (UIButton *)buttonWithTitle:(NSString *)string  {
 	// Make a default set of insets for padding the buttons
@@ -169,7 +109,76 @@
 }
 
 - (void)configureView  {
-	
+	if (self.restaurant) {
+		// Use the header's height to start calculating the total height for the scroll view
+		self.totalHeight = self.headerView.frame.origin.y + self.headerView.frame.size.height;
+		
+		if (self.restaurant.hours) {
+			NSMutableString *hoursText = [[NSMutableString alloc] init];
+			NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
+			[dateFormatter setTimeStyle:NSDateFormatterShortStyle];
+			NSArray *dayNames = @[@"Monday", @"Tuesday", @"Wednesday", @"Thursday", @"Friday", @"Saturday", @"Sunday"];
+			for (int i = 0; i < dayNames.count; i++) {
+				// Factual's days are 1-indexed, hence the i+1
+				if ([self.restaurant.hours objectForKey:[NSString stringWithFormat:@"%d", i+1]]) {
+					[hoursText appendFormat:@"%@:\n", dayNames[i]];
+					
+					for (NSArray *hourArray	in [self.restaurant.hours objectForKey:[NSString stringWithFormat:@"%d", i+1]]) {
+						NSDate *date1 = [dateFormatter dateFromString:hourArray[0]];
+						NSDate *date2 = [dateFormatter dateFromString:hourArray[1]];
+						[hoursText appendFormat:@"%@ – %@", [dateFormatter stringFromDate:date1], [dateFormatter stringFromDate:date2]];
+						if (hourArray.count > 2) {
+							[hoursText appendFormat:@" — %@", hourArray[2]];  // Some hours have a label like "Lunch" or "Dinner"
+						}
+						[hoursText appendFormat:@"\n"];
+					}
+				}
+			}
+			
+			UILabel *hoursLabel = [[UILabel alloc] init];
+			hoursLabel.backgroundColor = [UIColor clearColor];
+			hoursLabel.text = [NSString stringWithFormat:@"Hours:\n%@", hoursText];
+			hoursLabel.numberOfLines = 0;
+			
+			// Size the label to fit based on the size of the text, then conform to the size of the scroll view
+			[hoursLabel sizeToFit];
+			CGRect frame = hoursLabel.frame;
+			frame.origin = CGPointMake(LEFT_MARGIN, self.totalHeight + PADDING);
+			frame.size = CGSizeMake(WIDTH, hoursLabel.frame.size.height);
+			hoursLabel.frame = frame;
+			
+			hoursLabel.autoresizingMask = UIViewAutoresizingFlexibleWidth;
+			
+			[self.scrollView addSubview:hoursLabel];
+			self.totalHeight += PADDING;
+			self.totalHeight += frame.size.height;
+		}
+		
+		if (self.restaurant.website)  {
+			UIButton *websiteButton = [self buttonWithTitle:self.restaurant.website];
+			[websiteButton addTarget:self action:@selector(openWebsite) forControlEvents:UIControlEventTouchUpInside];
+			[self.scrollView addSubview:websiteButton];
+		}
+		
+		if (self.restaurant.telephone)  {
+			UIButton *phoneButton = [self buttonWithTitle:self.restaurant.telephone];
+			[phoneButton addTarget:self action:@selector(dialPhoneNumber) forControlEvents:UIControlEventTouchUpInside];
+			[self.scrollView addSubview:phoneButton];
+		}
+		
+		if (self.restaurant.address)  {
+			UIButton *addressButton = [self buttonWithTitle:self.restaurant.address];
+			[addressButton addTarget:self action:@selector(openMap) forControlEvents:UIControlEventTouchUpInside];
+			[self.scrollView addSubview:addressButton];
+		}
+		
+		self.nameLabel.text = self.restaurant.name;
+		self.cuisineLabel.text = self.restaurant.cuisine;
+		
+		[self.scrollView setContentSize:CGSizeMake(self.scrollView.frame.size.width, (self.totalHeight + PADDING))];
+		
+		//NSLog(@"XXX scrollView contentSize: (%f, %f)", self.scrollView.contentSize.width, self.scrollView.contentSize.height);
+	}
 }
 
 @end

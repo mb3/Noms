@@ -12,10 +12,10 @@
 
 @interface MBDetailViewController : UIViewController
 
-@property (strong, nonatomic) IBOutlet UINavigationItem *navItem;
+//@property (strong, nonatomic) IBOutlet UINavigationItem *navItem;
 
-@property (strong, nonatomic) IBOutlet UILabel *nameLabel;
-@property (strong, nonatomic) IBOutlet UILabel *cuisineLabel;
+@property (weak, nonatomic) IBOutlet UILabel *nameLabel;
+@property (weak, nonatomic) IBOutlet UILabel *cuisineLabel;
 
 @property (strong, nonatomic) IBOutlet UIView *headerView;
 @property (strong, nonatomic) IBOutlet UIScrollView *scrollView;

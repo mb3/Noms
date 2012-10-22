@@ -243,6 +243,14 @@ static NSString *kFactualAPIKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 
 - (void)locationManager:(CLLocationManager *)manager didUpdateLocations:(NSArray *)locations  {
 	self.location = (CLLocation *)locations[locations.count - 1];
+	CLGeocoder *geocoder = [[CLGeocoder alloc] init];
+	[geocoder reverseGeocodeLocation:self.location completionHandler:^(NSArray *placemarks, NSError *error){
+		if (placemarks.count > 0 && !error) {
+			self.cityStateTextField.placeholder = [(CLPlacemark *)placemarks[0] name];
+		} else if (error)  {
+			NSLog(@"Failed to get location geocoding information. Error was: \n%@", error);
+		}
+	}];
 }
 
 
