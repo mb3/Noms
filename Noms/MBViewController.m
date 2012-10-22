@@ -126,7 +126,7 @@ static NSString *kFactualAPIKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 		for (NSDictionary *dict in [[factualResponse objectForKey:@"response"] objectForKey:@"data"]) {
 			MBFactualRestaurant *restaurant = [MBFactualRestaurant restaurantFromFactualDictionary:dict];
 			[self.restaurants addObject:restaurant];
-			NSLog(@"XXX Just added %@", restaurant.name);
+			//NSLog(@"XXX Just added %@", restaurant.name);
 		}
 	}
 	
@@ -138,7 +138,7 @@ static NSString *kFactualAPIKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 
 	if (self.locationButton.selected) {
 		[self.locationManager startMonitoringSignificantLocationChanges];
-		NSLog(@"Starting up Location Services…");
+		NSLog(@"XXX Starting up Location Services…");
 		self.cityStateTextField.enabled = NO;
 	} else  {
 		[self.locationManager stopMonitoringSignificantLocationChanges];

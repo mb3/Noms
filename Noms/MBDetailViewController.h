@@ -17,12 +17,6 @@
 @property (strong, nonatomic) IBOutlet UILabel *nameLabel;
 @property (strong, nonatomic) IBOutlet UILabel *cuisineLabel;
 
-@property (strong, nonatomic) IBOutlet UITextView *hoursView;
-
-//@property (strong, nonatomic) IBOutlet UIButton *websiteButton;
-//@property (strong, nonatomic) IBOutlet UIButton *phoneNumberButton;
-//@property (strong, nonatomic) IBOutlet UIButton *addressButton;
-
 @property (strong, nonatomic) IBOutlet UIView *headerView;
 @property (strong, nonatomic) IBOutlet UIScrollView *scrollView;
 
@@ -30,8 +24,8 @@
 
 - (UIButton *)buttonWithTitle:(NSString *)string;
 
-- (IBAction)dialPhoneNumber;
-- (IBAction)openWebsite;
-- (IBAction)openMap;
+- (void)dialPhoneNumber;
+- (void)openWebsite;
+- (void)openMap;
 
 @end

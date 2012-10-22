@@ -40,15 +40,20 @@
 	// Use the header's height to start calculating the total height for the scroll view
 	self.totalHeight = self.headerView.frame.origin.y + self.headerView.frame.size.height;
 	
-	if (self.restaurant.hours) {
+	if (self.restaurant.hours) {		
 		NSMutableString *hoursText = [[NSMutableString alloc] init];
+		NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
+		[dateFormatter setTimeStyle:NSDateFormatterShortStyle];
 		NSArray *dayNames = @[@"Monday", @"Tuesday", @"Wednesday", @"Thursday", @"Friday", @"Saturday", @"Sunday"];
 		for (int i = 0; i < dayNames.count; i++) {
-			if ([self.restaurant.hours objectForKey:[NSString stringWithFormat:@"%d", i]]) {
-				[hoursText appendFormat:@"\n%@: ", dayNames[i]];
+			// Factual's days are 1-indexed, hence the i+1
+			if ([self.restaurant.hours objectForKey:[NSString stringWithFormat:@"%d", i+1]]) {
+				[hoursText appendFormat:@"%@:\n", dayNames[i]];
 				
-				for (NSArray *hourArray	in [self.restaurant.hours objectForKey:[NSString stringWithFormat:@"%d", i]]) {
-					[hoursText appendFormat:@"%@ – %@", hourArray[0], hourArray[1]];
+				for (NSArray *hourArray	in [self.restaurant.hours objectForKey:[NSString stringWithFormat:@"%d", i+1]]) {
+					NSDate *date1 = [dateFormatter dateFromString:hourArray[0]];
+					NSDate *date2 = [dateFormatter dateFromString:hourArray[1]];
+					[hoursText appendFormat:@"%@ – %@", [dateFormatter stringFromDate:date1], [dateFormatter stringFromDate:date2]];
 					if (hourArray.count > 2) {
 						[hoursText appendFormat:@" — %@", hourArray[2]];  // Some hours have a label like "Lunch" or "Dinner"
 					}
@@ -58,6 +63,7 @@
 		}
 		
 		UILabel *hoursLabel = [[UILabel alloc] init];
+		hoursLabel.backgroundColor = [UIColor clearColor];
 		hoursLabel.text = [NSString stringWithFormat:@"Hours:\n%@", hoursText];
 		hoursLabel.numberOfLines = 0;
 		
@@ -67,8 +73,11 @@
 		frame.origin = CGPointMake(LEFT_MARGIN, self.totalHeight + PADDING);
 		frame.size = CGSizeMake(WIDTH, hoursLabel.frame.size.height);
 		hoursLabel.frame = frame;
-				
+		
+		hoursLabel.autoresizingMask = UIViewAutoresizingFlexibleWidth;
+		
 		[self.scrollView addSubview:hoursLabel];
+		self.totalHeight += PADDING;
 		self.totalHeight += frame.size.height;
 	}
 	
@@ -95,20 +104,7 @@
 	
 	[self.scrollView setContentSize:CGSizeMake(self.scrollView.frame.size.width, (self.totalHeight + PADDING))];
 	
-	// UIControlStateNormal = 0, UIControlStateDisabled = 1 << 0, so can't bitwise or the normal state with disabled.
-	/*
-	[self.websiteButton setTitle:self.restaurant.website forState:UIControlStateNormal];
-	[self.websiteButton setTitle:self.restaurant.website forState:(UIControlStateDisabled | UIControlStateHighlighted)];
-	[self.phoneNumberButton setTitle:self.restaurant.telephone forState:UIControlStateNormal];
-	[self.phoneNumberButton setTitle:self.restaurant.telephone forState:(UIControlStateDisabled | UIControlStateHighlighted)];
-	[self.addressButton setTitle:self.restaurant.address forState:UIControlStateNormal];
-	[self.addressButton setTitle:self.restaurant.address forState:(UIControlStateDisabled | UIControlStateHighlighted)];
-	
-	[self.scrollView setContentSize:CGSizeMake(self.scrollView.frame.size.width, (self.addressButton.frame.size.height + self.addressButton.frame.origin.y + 7))];
-	
-	NSLog(@"XXX addressButton origin y: %f", self.addressButton.frame.origin.y);
-	 */
-	NSLog(@"XXX scrollView contentSize: (%f, %f)", self.scrollView.contentSize.width, self.scrollView.contentSize.height);
+	//NSLog(@"XXX scrollView contentSize: (%f, %f)", self.scrollView.contentSize.width, self.scrollView.contentSize.height);
 }
 
 - (void)didReceiveMemoryWarning
@@ -121,7 +117,7 @@
 
 - (UIButton *)buttonWithTitle:(NSString *)string  {
 	// Make a default set of insets for padding the buttons
-	UIEdgeInsets insets = UIEdgeInsetsMake(14, 14, 14, 14);
+	UIEdgeInsets insets = UIEdgeInsetsMake(10, 10, 10, 10);
 	
 	UIButton *newButton = [UIButton buttonWithType:UIButtonTypeRoundedRect];
 	newButton.titleLabel.numberOfLines = 0;
@@ -135,33 +131,36 @@
 	frame.size = CGSizeMake(WIDTH, newButton.frame.size.height);
 	newButton.frame = frame;
 	
+	newButton.autoresizingMask = UIViewAutoresizingFlexibleWidth;
+	
 	// Add the height of the new button to the total height for the next item  and the scroll view
+	self.totalHeight += PADDING;
 	self.totalHeight += frame.size.height;
 	
 	return newButton;	
 }
 
-- (IBAction)dialPhoneNumber  {
+- (void)dialPhoneNumber  {
 	NSString *telStringConverted = [self.restaurant.telephone stringByReplacingOccurrencesOfString:@"(" withString:@""];
 	telStringConverted = [telStringConverted stringByReplacingOccurrencesOfString:@")" withString:@""];
 	telStringConverted = [telStringConverted stringByReplacingOccurrencesOfString:@" " withString:@"-"];
 	
-	NSLog(@"XXX Phone URL = tel:1-%@", telStringConverted);
+	//NSLog(@"XXX Phone URL = tel:1-%@", telStringConverted);
 	
 	NSURL *phoneURL = [NSURL URLWithString:[NSString stringWithFormat:@"tel:1-%@", telStringConverted]];
 	if (![[UIApplication sharedApplication] openURL:phoneURL]) {
-		NSLog(@"XXX moo!");
+		NSLog(@"XXX Couldn't dial phone. Possibly just because the simulator doesn't support it.");
 	}
 }
 
-- (IBAction)openWebsite  {
+- (void)openWebsite  {
 	NSURL *websiteURL = [NSURL URLWithString:self.restaurant.website];
 	if(![[UIApplication sharedApplication] openURL:websiteURL])  {
 		NSLog(@"XXX Couldn't open website URL for whatever reason.");
 	}
 }
 
-- (IBAction)openMap  {
+- (void)openMap  {
 	NSString *addressQuery = [self.restaurant.address stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
 	NSURL *mapsURL = [NSURL URLWithString:[NSString stringWithFormat:@"http://maps.apple.com/maps?q=%@", addressQuery]];
 	if(![[UIApplication sharedApplication] openURL:mapsURL])  {
