@@ -19,12 +19,19 @@
 
 @property (strong, nonatomic) IBOutlet UITextView *hoursView;
 
-@property (strong, nonatomic) IBOutlet UIButton *websiteButton;
-@property (strong, nonatomic) IBOutlet UIButton *phoneNumberButton;
-@property (strong, nonatomic) IBOutlet UIButton *addressButton;
+//@property (strong, nonatomic) IBOutlet UIButton *websiteButton;
+//@property (strong, nonatomic) IBOutlet UIButton *phoneNumberButton;
+//@property (strong, nonatomic) IBOutlet UIButton *addressButton;
+
+@property (strong, nonatomic) IBOutlet UIView *headerView;
+@property (strong, nonatomic) IBOutlet UIScrollView *scrollView;
 
 @property (strong, nonatomic) MBFactualRestaurant *restaurant;
 
+- (UIButton *)buttonWithTitle:(NSString *)string;
+
 - (IBAction)dialPhoneNumber;
+- (IBAction)openWebsite;
+- (IBAction)openMap;
 
 @end

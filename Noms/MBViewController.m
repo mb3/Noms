@@ -10,7 +10,7 @@
 #import "MBDetailViewController.h"
 #import "MBFactualRestaurant.h"
 
-static NSString *kOAuthKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
+static NSString *kFactualAPIKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 
 @interface MBViewController () {
 }
@@ -25,6 +25,8 @@ static NSString *kOAuthKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 	[super viewDidLoad];
 	// Do any additional setup after loading the view, typically from a nib.
 	
+	self.locationManager = [[CLLocationManager alloc] init];
+	self.locationManager.delegate = self;
 }
 
 - (void)didReceiveMemoryWarning  {
@@ -38,55 +40,72 @@ static NSString *kOAuthKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 	
 	NSLog(@"XXX Got some text, %@ and %@", self.cityStateTextField.text, self.searchTermsTextField.text);
 	
-	// Strip out periods from the input. Factual doesn't like them, and iOS autocorrects certain things to include periods, e.g. "Washington, D.C.".
-	NSString *cityStateText = [self.cityStateTextField.text stringByReplacingOccurrencesOfString:@"." withString:@""];
-	
-	// String processing for city, state location. First, try comma separators...
-	NSMutableString *locality = [NSMutableString stringWithFormat:@""];  // A nil string will print as "(null)"
-	NSString *region = @"";  // A nil string will print as "(null)"
-	NSArray *locationComponents = [cityStateText componentsSeparatedByString:@", "];
-	// ...if there aren't any, try spaces...
-	if (locationComponents.count < 2) {
-		locationComponents = [cityStateText componentsSeparatedByString:@" "];
-		// ...if still not, just send the single string as "locality"...
-		if (locationComponents.count < 2) {
-			locality = locationComponents[0];
-		} else if (locationComponents.count > 2) {  // ...otherwise, check for multiple spaces (multiple-word cities)...
-			region = locationComponents[locationComponents.count - 1];  // ...last string component from the end is the "region". This will not pick up multi-word states ("New Mexico") properly...
-			//locality = [locality mutableCopy];
-			for (int i=0; i < locationComponents.count - 1; i++) {
-				[locality appendFormat:@"%@ %@", locality, locationComponents[i]];
-				NSLog(@"XXX Locality is now %@", locality);
-			}
-		}  else {
-			locality = locationComponents[0];
-			region = locationComponents[1];
-		}
-	} else {
-		locality = locationComponents[0];
-		region = locationComponents[1];
-	}
-	
-	NSLog(@"XXX Locality = %@, Region = %@", locality, region);
-	
 	// Construct the query URL. This all needs to be properly percent-escaped or NSURL won't take it, hence the multiple parts.
 	
 	NSString *requestURLPrefix  = @"http://api.v3.factual.com/t/restaurants-us?";
 	NSString *requestURLQuery   = [NSString stringWithFormat:@"q=%@", self.searchTermsTextField.text];
-	NSString *requestURLFilters = [NSString stringWithFormat:@"filters={\"region\":\"%@\",\"locality\":\"%@\"}", region, locality];
+	NSString *requestStringEncoded;
 	
-	CFStringRef requestURLQueryEncoded = CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault,
-																																						   (__bridge CFStringRef)(requestURLQuery),
-																																							 NULL,
-																																						   CFSTR(":/?#[]@!$&'()*+.,;="),
-																																						   kCFStringEncodingUTF8);
-	CFStringRef requestURLFiltersEncoded = CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault,
-																																								 (__bridge CFStringRef)(requestURLFilters),
+	// Use Location Services data if it's enabled.
+	if (self.location) {
+		NSString *requestCoordinates = [NSString stringWithFormat:@"geo={\"$circle\":{\"$center\":[%f,%f],\"$meters\":5000}}", self.location.coordinate.latitude, self.location.coordinate.longitude];
+		NSString *requestURLQueryEncoded = [requestURLQuery stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+		NSString *requestCoordinatesEncoded = [requestCoordinates stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+		
+		requestStringEncoded = [NSString stringWithFormat:@"%@%@&%@&KEY=%@", requestURLPrefix, requestURLQueryEncoded, requestCoordinatesEncoded, kFactualAPIKey];
+	} else  {
+		// Otherwise, use input from the city / state text field.
+	
+		// Strip out periods from the input. Factual doesn't like them, and iOS autocorrects certain things to include periods, e.g. "Washington, D.C.".
+		NSString *cityStateText = [self.cityStateTextField.text stringByReplacingOccurrencesOfString:@"." withString:@""];
+		
+		// String processing for city, state location. First, try comma separators...
+		NSMutableString *locality = [NSMutableString stringWithFormat:@""];  // A nil string will print as "(null)"
+		NSString *region = @"";  // A nil string will print as "(null)"
+		NSArray *locationComponents = [cityStateText componentsSeparatedByString:@", "];
+		// ...if there aren't any, try spaces...
+		if (locationComponents.count < 2) {
+			locationComponents = [cityStateText componentsSeparatedByString:@" "];
+			// ...if still not, just send the single string as "locality"...
+			if (locationComponents.count < 2) {
+				locality = locationComponents[0];
+			} else if (locationComponents.count > 2) {  // ...otherwise, check for multiple spaces (multiple-word cities)...
+				region = locationComponents[locationComponents.count - 1];  // ...last string component from the end is the "region". This will not pick up multi-word states ("New Mexico") properly...
+				//locality = [locality mutableCopy];
+				for (int i=0; i < locationComponents.count - 1; i++) {
+					[locality appendFormat:@" %@", locationComponents[i]];
+					NSLog(@"XXX Locality is now %@", locality);
+				}
+				locality = (NSMutableString *)[locality stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+			}  else {
+				locality = locationComponents[0];
+				region = locationComponents[1];
+			}
+		} else {
+			locality = locationComponents[0];
+			region = locationComponents[1];
+		}
+		
+		NSLog(@"XXX Locality = %@, Region = %@", locality, region);
+		
+		NSString *requestURLFilters = [NSString stringWithFormat:@"filters={\"region\":\"%@\",\"locality\":\"%@\"}", region, locality];
+		
+		CFStringRef requestURLQueryEncoded = CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault,
+																																								 (__bridge CFStringRef)(requestURLQuery),
 																																								 NULL,
 																																								 CFSTR(":/?#[]@!$&'()*+.,;="),
 																																								 kCFStringEncodingUTF8);
-	NSString *requestStringEncoded = [NSString stringWithFormat:@"%@%@&%@&KEY=%@", requestURLPrefix, (__bridge NSString *)(requestURLQueryEncoded), (__bridge NSString *)(requestURLFiltersEncoded), kOAuthKey];
+		CFStringRef requestURLFiltersEncoded = CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault,
+																																									 (__bridge CFStringRef)(requestURLFilters),
+																																									 NULL,
+																																									 CFSTR(":/?#[]@!$&'()*+.,;="),
+																																									 kCFStringEncodingUTF8);
+		requestStringEncoded = [NSString stringWithFormat:@"%@%@&%@&KEY=%@", requestURLPrefix, (__bridge NSString *)(requestURLQueryEncoded), (__bridge NSString *)(requestURLFiltersEncoded), kFactualAPIKey];
 	
+		CFRelease(requestURLQueryEncoded);
+		CFRelease(requestURLFiltersEncoded);
+		
+	}
 	
 	NSURLRequest *request = [NSURLRequest requestWithURL:[NSURL URLWithString:requestStringEncoded]];
 	self.connection = [NSURLConnection connectionWithRequest:request delegate:self];
@@ -112,6 +131,20 @@ static NSString *kOAuthKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 	}
 	
 	[self.tableView reloadData];
+}
+
+- (IBAction)toggleLocationServices  {
+	self.locationButton.selected = !self.locationButton.selected;
+
+	if (self.locationButton.selected) {
+		[self.locationManager startMonitoringSignificantLocationChanges];
+		NSLog(@"Starting up Location Services…");
+		self.cityStateTextField.enabled = NO;
+	} else  {
+		[self.locationManager stopMonitoringSignificantLocationChanges];
+		self.cityStateTextField.enabled = YES;
+		self.location = nil;
+	}
 }
 
 #pragma mark - NSURLConnectionDelegate methods
@@ -204,6 +237,12 @@ static NSString *kOAuthKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 	[self performFactualRestaurantSearch];
 	
 	return YES;
+}
+
+#pragma mark - CLLocationManagerDelegate methods
+
+- (void)locationManager:(CLLocationManager *)manager didUpdateLocations:(NSArray *)locations  {
+	self.location = (CLLocation *)locations[locations.count - 1];
 }
 
 

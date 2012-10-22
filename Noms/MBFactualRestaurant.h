@@ -15,7 +15,7 @@
 @property (nonatomic, copy) NSString *cuisine;
 @property (nonatomic, assign) NSInteger price;
 @property (strong, nonatomic) NSNumber *rating;
-@property (strong, nonatomic) NSMutableDictionary *hours;
+@property (strong, nonatomic) NSDictionary *hours;
 
 @property (nonatomic, assign) BOOL servesBreakfast;
 @property (nonatomic, assign) BOOL servesLunch;

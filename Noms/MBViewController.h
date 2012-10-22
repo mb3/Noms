@@ -7,20 +7,28 @@
 //
 
 #import <UIKit/UIKit.h>
+#import <CoreLocation/CoreLocation.h>
 
 @class MBDetailViewController;
 
-@interface MBViewController : UIViewController <UITextFieldDelegate, UITableViewDelegate, UITableViewDataSource, NSURLConnectionDelegate, NSURLConnectionDataDelegate>
+@interface MBViewController : UIViewController <UITextFieldDelegate, UITableViewDelegate, UITableViewDataSource, NSURLConnectionDelegate, NSURLConnectionDataDelegate, CLLocationManagerDelegate>
 
 @property (strong, nonatomic) IBOutlet UITextField *searchTermsTextField;
 @property (strong, nonatomic) IBOutlet UITextField *cityStateTextField;
 @property (strong, nonatomic) IBOutlet UITableView *tableView;
+@property (strong, nonatomic) IBOutlet UIButton *locationButton;
+
+- (IBAction)toggleLocationServices;
 
 - (void)performFactualRestaurantSearch;
 - (void)parseJSON;
 
+@property (strong, nonatomic) CLLocationManager *locationManager;
 @property (strong, nonatomic) NSURLConnection *connection;
+
 @property (strong, nonatomic) NSMutableData *jsonData;
 @property (strong, nonatomic) NSMutableArray *restaurants;
+
+@property (strong, nonatomic) CLLocation *location;
 
 @end

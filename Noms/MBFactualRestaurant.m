@@ -24,6 +24,15 @@
 		[self setPrice:[[dictionary objectForKey:@"price"] intValue]];
 		[self setRating:[dictionary objectForKey:@"rating"]];
 		
+		// Factual returns hours as another JSON object, so parse it if it exists
+		if ([dictionary objectForKey:@"hours"]) {
+			NSError *parseError;
+			self.hours = [NSJSONSerialization JSONObjectWithData:[[dictionary objectForKey:@"hours"] dataUsingEncoding:NSUTF8StringEncoding] options:0 error:&parseError];
+			if (parseError) {
+				NSLog(@"XXX Error parsing hours JSON: %@", parseError);
+			}
+		}
+		
 		[self setServesBreakfast:[[dictionary objectForKey:@"meal_breakfast"] boolValue]];
 		[self setServesLunch:[[dictionary objectForKey:@"meal_lunch"] boolValue]];
 		[self setServesDinner:[[dictionary objectForKey:@"meal_dinner"] boolValue]];
