@@ -76,7 +76,7 @@
                                 <nil key="highlightedColor"/>
                                 <color key="shadowColor" cocoaTouchSystemColor="darkTextColor"/>
                             </label>
-                            <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="City, State" minimumFontSize="17" clearButtonMode="whileEditing" id="awG-0A-jg2">
+                            <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="City, ST" minimumFontSize="17" clearButtonMode="whileEditing" id="awG-0A-jg2">
                                 <rect key="frame" x="74" y="48" width="187" height="30"/>
                                 <autoresizingMask key="autoresizingMask" widthSizable="YES"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="14"/>
@@ -170,7 +170,6 @@
                         <outlet property="cuisineLabel" destination="LST-qQ-a9G" id="0f6-Hf-6F3"/>
                         <outlet property="headerView" destination="Epu-zi-SCp" id="KPP-Of-yYB"/>
                         <outlet property="nameLabel" destination="ZJr-PQ-tVI" id="kqb-bj-95S"/>
-                        <outlet property="navItem" destination="gPp-Zu-7xA" id="lnX-XC-dN5"/>
                         <outlet property="scrollView" destination="FL5-o5-lcU" id="Yba-0A-0QK"/>
                     </connections>
                 </viewController>

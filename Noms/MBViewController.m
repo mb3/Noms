@@ -90,6 +90,11 @@ static NSString *kFactualAPIKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 		
 		NSString *requestURLFilters = [NSString stringWithFormat:@"filters={\"region\":\"%@\",\"locality\":\"%@\"}", region, locality];
 		
+		NSString *requestURLQueryEncoded = [requestURLQuery stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+		NSString *requestURLFiltersEncoded = [requestURLFilters stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+		
+		
+		/*
 		CFStringRef requestURLQueryEncoded = CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault,
 																																								 (__bridge CFStringRef)(requestURLQuery),
 																																								 NULL,
@@ -100,10 +105,14 @@ static NSString *kFactualAPIKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 																																									 NULL,
 																																									 CFSTR(":/?#[]@!$&'()*+.,;="),
 																																									 kCFStringEncodingUTF8);
-		requestStringEncoded = [NSString stringWithFormat:@"%@%@&%@&KEY=%@", requestURLPrefix, (__bridge NSString *)(requestURLQueryEncoded), (__bridge NSString *)(requestURLFiltersEncoded), kFactualAPIKey];
+		 */
+		
+		requestStringEncoded = [NSString stringWithFormat:@"%@%@&%@&KEY=%@", requestURLPrefix, requestURLQueryEncoded, requestURLFiltersEncoded, kFactualAPIKey];
 	
+		/*
 		CFRelease(requestURLQueryEncoded);
 		CFRelease(requestURLFiltersEncoded);
+		 */
 		
 	}
 	
@@ -130,7 +139,17 @@ static NSString *kFactualAPIKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 		}
 	}
 	
-	[self.tableView reloadData];
+	if (self.restaurants.count > 0) {
+		[self.tableView reloadData];
+		[self.tableView setContentOffset:CGPointMake(0.0, 0.0) animated:YES];  // Scroll to the top when loading new data
+	} else  {
+		UIAlertView *noResultsAlert = [[UIAlertView alloc] initWithTitle:@"No results found."
+																														 message:nil
+																														delegate:nil
+																									 cancelButtonTitle:@"Dismiss"
+																									 otherButtonTitles:nil];
+		[noResultsAlert show];
+	}
 }
 
 - (IBAction)toggleLocationServices  {
@@ -143,6 +162,7 @@ static NSString *kFactualAPIKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 	} else  {
 		[self.locationManager stopMonitoringSignificantLocationChanges];
 		self.cityStateTextField.enabled = YES;
+		self.cityStateTextField.placeholder = @"City, ST";
 		self.location = nil;
 	}
 }
@@ -206,7 +226,7 @@ static NSString *kFactualAPIKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 	return NO;
 }
 
-// This is not a reorderable table
+// This is not a reorderable table view
 - (BOOL)tableView:(UITableView *)tableView canMoveRowAtIndexPath:(NSIndexPath *)indexPath  {
 	return NO;
 }
@@ -246,7 +266,7 @@ static NSString *kFactualAPIKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 	CLGeocoder *geocoder = [[CLGeocoder alloc] init];
 	[geocoder reverseGeocodeLocation:self.location completionHandler:^(NSArray *placemarks, NSError *error){
 		if (placemarks.count > 0 && !error) {
-			self.cityStateTextField.placeholder = [(CLPlacemark *)placemarks[0] name];
+			self.cityStateTextField.placeholder = [NSString stringWithFormat:@"%@, %@", [(CLPlacemark *)placemarks[0] locality], [(CLPlacemark *)placemarks[0] administrativeArea]];
 		} else if (error)  {
 			NSLog(@"Failed to get location geocoding information. Error was: \n%@", error);
 		}

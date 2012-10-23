@@ -49,8 +49,8 @@
 #pragma mark - Instance methods
 
 - (void)setRestaurant:(MBFactualRestaurant *)newRestaurant  {
-	if (self.restaurant != newRestaurant) {
-		self.restaurant = newRestaurant;
+	if (_restaurant != newRestaurant) {
+		_restaurant = newRestaurant;
 		[self configureView];
 	}
 }
