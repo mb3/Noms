@@ -115,21 +115,32 @@
 		
 		if (self.restaurant.hours) {
 			NSMutableString *hoursText = [[NSMutableString alloc] init];
-			NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
-			[dateFormatter setTimeStyle:NSDateFormatterShortStyle];
+
+			// Use a pair of NSDateFormatters to convert Factual's 24-hour time into the user's local format
+			NSDateFormatter *inFormatter = [[NSDateFormatter alloc] init];
+			NSDateFormatter *outFormatter = [[NSDateFormatter alloc] init];
+
+			[inFormatter setLocale:[[NSLocale alloc] initWithLocaleIdentifier:@"en_US_POSIX"]];
+			[inFormatter setDateFormat:@"kk:mm"];  // kk = 1-24
+
+			[outFormatter setTimeStyle:NSDateFormatterShortStyle];
+			[outFormatter setDateStyle:NSDateFormatterNoStyle];
+			
 			NSArray *dayNames = @[@"Monday", @"Tuesday", @"Wednesday", @"Thursday", @"Friday", @"Saturday", @"Sunday"];
+			
 			for (int i = 0; i < dayNames.count; i++) {
 				// Factual's days are 1-indexed, hence the i+1
 				if ([self.restaurant.hours objectForKey:[NSString stringWithFormat:@"%d", i+1]]) {
 					[hoursText appendFormat:@"%@:\n", dayNames[i]];
 					
 					for (NSArray *hourArray	in [self.restaurant.hours objectForKey:[NSString stringWithFormat:@"%d", i+1]]) {
-						NSDate *date1 = [dateFormatter dateFromString:hourArray[0]];
-						NSDate *date2 = [dateFormatter dateFromString:hourArray[1]];
-						[hoursText appendFormat:@"%@ – %@", [dateFormatter stringFromDate:date1], [dateFormatter stringFromDate:date2]];
-						if (hourArray.count > 2) {
+						NSDate *date1 = [inFormatter dateFromString:hourArray[0]];
+						NSDate *date2 = [inFormatter dateFromString:hourArray[1]];
+						
+						[hoursText appendFormat:@"%@ – %@", [outFormatter stringFromDate:date1], [outFormatter stringFromDate:date2]];
+						if (hourArray.count > 2)
 							[hoursText appendFormat:@" — %@", hourArray[2]];  // Some hours have a label like "Lunch" or "Dinner"
-						}
+						
 						[hoursText appendFormat:@"\n"];
 					}
 				}
@@ -137,7 +148,7 @@
 			
 			UILabel *hoursLabel = [[UILabel alloc] init];
 			hoursLabel.backgroundColor = [UIColor clearColor];
-			hoursLabel.text = [NSString stringWithFormat:@"Hours:\n%@", hoursText];
+			hoursLabel.text = [NSString stringWithFormat:@"HOURS\n%@", hoursText];
 			hoursLabel.numberOfLines = 0;
 			
 			// Size the label to fit based on the size of the text, then conform to the size of the scroll view

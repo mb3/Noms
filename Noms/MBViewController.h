@@ -30,5 +30,6 @@
 @property (strong, nonatomic) NSMutableArray *restaurants;
 
 @property (strong, nonatomic) CLLocation *location;
+@property (strong, nonatomic) CLPlacemark *cachedPlacemark;
 
 @end

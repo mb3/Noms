@@ -47,7 +47,7 @@ static NSString *kFactualAPIKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 	NSString *requestStringEncoded;
 	
 	// Use Location Services data if it's enabled.
-	if (self.location) {
+	if (/*self.location*/ self.locationButton.selected) {
 		NSString *requestCoordinates = [NSString stringWithFormat:@"geo={\"$circle\":{\"$center\":[%f,%f],\"$meters\":5000}}", self.location.coordinate.latitude, self.location.coordinate.longitude];
 		NSString *requestURLQueryEncoded = [requestURLQuery stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
 		NSString *requestCoordinatesEncoded = [requestCoordinates stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
@@ -93,26 +93,7 @@ static NSString *kFactualAPIKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 		NSString *requestURLQueryEncoded = [requestURLQuery stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
 		NSString *requestURLFiltersEncoded = [requestURLFilters stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
 		
-		
-		/*
-		CFStringRef requestURLQueryEncoded = CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault,
-																																								 (__bridge CFStringRef)(requestURLQuery),
-																																								 NULL,
-																																								 CFSTR(":/?#[]@!$&'()*+.,;="),
-																																								 kCFStringEncodingUTF8);
-		CFStringRef requestURLFiltersEncoded = CFURLCreateStringByAddingPercentEscapes(kCFAllocatorDefault,
-																																									 (__bridge CFStringRef)(requestURLFilters),
-																																									 NULL,
-																																									 CFSTR(":/?#[]@!$&'()*+.,;="),
-																																									 kCFStringEncodingUTF8);
-		 */
-		
 		requestStringEncoded = [NSString stringWithFormat:@"%@%@&%@&KEY=%@", requestURLPrefix, requestURLQueryEncoded, requestURLFiltersEncoded, kFactualAPIKey];
-	
-		/*
-		CFRelease(requestURLQueryEncoded);
-		CFRelease(requestURLFiltersEncoded);
-		 */
 		
 	}
 	
@@ -154,16 +135,23 @@ static NSString *kFactualAPIKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 
 - (IBAction)toggleLocationServices  {
 	self.locationButton.selected = !self.locationButton.selected;
+	self.cityStateTextField.text = @"";
 
 	if (self.locationButton.selected) {
 		[self.locationManager startMonitoringSignificantLocationChanges];
 		NSLog(@"XXX Starting up Location Services…");
 		self.cityStateTextField.enabled = NO;
+
+		// A bit of a hack, but since CLLocationManager doesn't fire its delegate method until the location has *changed*, continue to fill in the existing location if we already have one.
+		if (self.location && self.cachedPlacemark) {
+			self.cityStateTextField.textColor = [UIColor blueColor];
+			self.cityStateTextField.text = [NSString stringWithFormat:@"%@, %@", self.cachedPlacemark.locality, self.cachedPlacemark.administrativeArea];
+		}
 	} else  {
 		[self.locationManager stopMonitoringSignificantLocationChanges];
+		self.cityStateTextField.textColor = [UIColor darkTextColor];
 		self.cityStateTextField.enabled = YES;
-		self.cityStateTextField.placeholder = @"City, ST";
-		self.location = nil;
+		//self.location = nil;
 	}
 }
 
@@ -262,15 +250,35 @@ static NSString *kFactualAPIKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 #pragma mark - CLLocationManagerDelegate methods
 
 - (void)locationManager:(CLLocationManager *)manager didUpdateLocations:(NSArray *)locations  {
+	NSLog(@"XXX Updating location…");
 	self.location = (CLLocation *)locations[locations.count - 1];
 	CLGeocoder *geocoder = [[CLGeocoder alloc] init];
 	[geocoder reverseGeocodeLocation:self.location completionHandler:^(NSArray *placemarks, NSError *error){
 		if (placemarks.count > 0 && !error) {
-			self.cityStateTextField.placeholder = [NSString stringWithFormat:@"%@, %@", [(CLPlacemark *)placemarks[0] locality], [(CLPlacemark *)placemarks[0] administrativeArea]];
+			self.cachedPlacemark = placemarks[0];
+			self.cityStateTextField.text = [NSString stringWithFormat:@"%@, %@", self.cachedPlacemark.locality, self.cachedPlacemark.administrativeArea];
+			self.cityStateTextField.textColor = [UIColor blueColor];
 		} else if (error)  {
 			NSLog(@"Failed to get location geocoding information. Error was: \n%@", error);
 		}
 	}];
+}
+
+- (void)locationManager:(CLLocationManager *)manager didFailWithError:(NSError *)error  {
+	if (error.code == kCLErrorDenied) {
+		[self.locationManager stopMonitoringSignificantLocationChanges];
+		self.cachedPlacemark = nil;
+		self.location = nil;
+		self.locationButton.selected = NO;
+		self.cityStateTextField.textColor = [UIColor darkTextColor];
+
+		UIAlertView *locDeniedAlert = [[UIAlertView alloc] initWithTitle:@"Location Services disabled"
+																														 message:@"To allow access to your location, go to Settings > Privacy > Location."
+																														delegate:nil
+																									 cancelButtonTitle:@"Dismiss"
+																									 otherButtonTitles:nil];
+		[locDeniedAlert show];
+	}
 }
 
 
