@@ -34,11 +34,12 @@ static NSString *kFactualAPIKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 	// Dispose of any resources that can be recreated.
 }
 
+
 #pragma mark - Instance methods
 
 - (void)performFactualRestaurantSearch  {
 	
-	NSLog(@"XXX Got some text, %@ and %@", self.cityStateTextField.text, self.searchTermsTextField.text);
+	//NSLog(@"XXX Got some text, %@ and %@", self.cityStateTextField.text, self.searchTermsTextField.text);
 	
 	// Construct the query URL. This all needs to be properly percent-escaped or NSURL won't take it, hence the multiple parts.
 	
@@ -59,9 +60,11 @@ static NSString *kFactualAPIKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 		// Strip out periods from the input. Factual doesn't like them, and iOS autocorrects certain things to include periods, e.g. "Washington, D.C.".
 		NSString *cityStateText = [self.cityStateTextField.text stringByReplacingOccurrencesOfString:@"." withString:@""];
 		
-		// String processing for city, state location. First, try comma separators...
+		// String processing for city, state location. First, try to get City, ST as comma-separated values.
+		
 		NSMutableString *locality = [NSMutableString stringWithFormat:@""];  // A nil string will print as "(null)"
-		NSString *region = @"";  // A nil string will print as "(null)"
+		NSString *region = @"";
+		
 		NSArray *locationComponents = [cityStateText componentsSeparatedByString:@", "];
 		// ...if there aren't any, try spaces...
 		if (locationComponents.count < 2) {
@@ -86,7 +89,7 @@ static NSString *kFactualAPIKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 			region = locationComponents[1];
 		}
 		
-		NSLog(@"XXX Locality = %@, Region = %@", locality, region);
+		//NSLog(@"XXX Locality = %@, Region = %@", locality, region);
 		
 		NSString *requestURLFilters = [NSString stringWithFormat:@"filters={\"region\":\"%@\",\"locality\":\"%@\"}", region, locality];
 		
@@ -102,13 +105,13 @@ static NSString *kFactualAPIKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 	
 	self.jsonData = [NSMutableData data];
 	
-	NSLog(@"XXX Request string was: %@", requestStringEncoded);
+	//NSLog(@"XXX Request string was: %@", requestStringEncoded);
 }
 
 - (void)parseJSON  {
 	NSError *parseError = nil;
 	NSDictionary *factualResponse = [NSJSONSerialization JSONObjectWithData:self.jsonData options:0 error:&parseError];
-	NSLog(@"XXX JSON -> NSDictionary: %@", factualResponse);
+	//NSLog(@"XXX JSON -> NSDictionary: %@", factualResponse);
 	
 	if (!parseError) {
 		self.restaurants = [[NSMutableArray alloc] initWithCapacity:20];
@@ -155,6 +158,7 @@ static NSString *kFactualAPIKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 	}
 }
 
+
 #pragma mark - NSURLConnectionDelegate methods
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error  {
@@ -174,6 +178,7 @@ static NSString *kFactualAPIKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 		[alert show];
 	}
 }
+
 
 #pragma mark - NSURLConnectionDataDelegate methods
 
@@ -219,6 +224,7 @@ static NSString *kFactualAPIKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 	return NO;
 }
 
+
 #pragma mark - UITableViewDelegate methods
 
 /*
@@ -237,6 +243,7 @@ static NSString *kFactualAPIKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 	}
 }
 
+
 #pragma mark - UITextViewDelegate methods
 
 - (BOOL)textFieldShouldReturn:(UITextField *)textField  {
@@ -246,6 +253,7 @@ static NSString *kFactualAPIKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 	
 	return YES;
 }
+
 
 #pragma mark - CLLocationManagerDelegate methods
 

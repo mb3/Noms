@@ -10,22 +10,28 @@
 
 @interface MBFactualRestaurant : NSObject
 
+// The restaurant's name.
 @property (nonatomic, copy) NSString *name;
-
+// The cuisine offered by the restaurant.
 @property (nonatomic, copy) NSString *cuisine;
-@property (nonatomic, assign) NSInteger price;
-@property (strong, nonatomic) NSNumber *rating;
+
+// The restaurant's hours of operation.
+// Factual provides this information as a JSON object, which is converted to to a dictionary. It is keyed by day numbers
+// 1-7, starting on Monday. The values are an array of "groups" of hours (for, e.g. separate lunch and dinner hours), which
+// are then represented as an array of two strings, representing opening and closing times, and optionally a third string,
+// representing a label for the hour group ("Dinner", "Happy Hour", and so on).
 @property (strong, nonatomic) NSDictionary *hours;
 
-@property (nonatomic, assign) BOOL servesBreakfast;
-@property (nonatomic, assign) BOOL servesLunch;
-@property (nonatomic, assign) BOOL servesDinner;
-
+// The restaurant's street address. This is a concatenation of Factual's "address", "locality", "region", and "postcode"
+// keys.
 @property (nonatomic, copy) NSString *address;
 
+// The restaurant's telephone number (stored as (999) 999-9999) and website.
 @property (nonatomic, copy) NSString *telephone;
 @property (nonatomic, copy) NSString *website;
 
+// Factory method and constructor for creating a restaurant object from an NSDictionary representing the raw data from
+// Factual's JSON.
 + (id)restaurantFromFactualDictionary:(NSDictionary *)dictionary;
 - (id)initFromFactualDictionary:(NSDictionary *)dictionary;
 

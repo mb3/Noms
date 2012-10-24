@@ -9,17 +9,21 @@
 #import "MBDetailViewController.h"
 #import "MBFactualRestaurant.h"
 
-#define WIDTH       280  // Most controls will be 280 pt wide
-#define PADDING       7  // 7 pt vertical padding is what IB seems to use between most controls
+#define WIDTH       280  // Most controls will be 280 pt wide (320 pt - 20 pt margin on each side)
+#define PADDING       7  // 7 pt vertical padding in betweeen controls in the scroll view
 #define LEFT_MARGIN  20  // Put all controls at a 20 pt indent from the left margin
 
 @interface MBDetailViewController ()
 
+// The total height of all the subviews of the scroll view. Updated as each subview is added and then used to
+// tell the scroll view how tall the scrollable area is.
 @property (nonatomic, assign) CGFloat totalHeight;
 
+// Lay out the hours label and add all existing subviews to the scroll view.
 - (void)configureView;
 
 @end
+
 
 @implementation MBDetailViewController
 
@@ -81,12 +85,12 @@
 }
 
 - (void)dialPhoneNumber  {
+	// As best I can tell, the format for the tel: scheme is tel:9-999-999-9999. But I can't tell if this is wrong, or
+	// if the simulator is just returning NO below because it doesn't support the scheme.
 	NSString *telStringConverted = [self.restaurant.telephone stringByReplacingOccurrencesOfString:@"(" withString:@""];
 	telStringConverted = [telStringConverted stringByReplacingOccurrencesOfString:@")" withString:@""];
 	telStringConverted = [telStringConverted stringByReplacingOccurrencesOfString:@" " withString:@"-"];
-	
-	//NSLog(@"XXX Phone URL = tel:1-%@", telStringConverted);
-	
+		
 	NSURL *phoneURL = [NSURL URLWithString:[NSString stringWithFormat:@"tel:1-%@", telStringConverted]];
 	if (![[UIApplication sharedApplication] openURL:phoneURL]) {
 		NSLog(@"XXX Couldn't dial phone. Possibly just because the simulator doesn't support it.");
@@ -113,6 +117,7 @@
 		// Use the header's height to start calculating the total height for the scroll view
 		self.totalHeight = self.headerView.frame.origin.y + self.headerView.frame.size.height;
 		
+		// Set up the label for the restaurant's hours, if they were provided.
 		if (self.restaurant.hours) {
 			NSMutableString *hoursText = [[NSMutableString alloc] init];
 
@@ -165,6 +170,7 @@
 			self.totalHeight += frame.size.height;
 		}
 		
+		// Add buttons for the restaurant's website, phone number, and address, if they were provided.
 		if (self.restaurant.website)  {
 			UIButton *websiteButton = [self buttonWithTitle:self.restaurant.website];
 			[websiteButton addTarget:self action:@selector(openWebsite) forControlEvents:UIControlEventTouchUpInside];
@@ -183,12 +189,13 @@
 			[self.scrollView addSubview:addressButton];
 		}
 		
+		// Set the labels at the top to the restaurant's name and type of cuisine.
 		self.nameLabel.text = self.restaurant.name;
 		self.cuisineLabel.text = self.restaurant.cuisine;
 		
+		// Now that the subviews are ready, add them all to the scroll view.
 		[self.scrollView setContentSize:CGSizeMake(self.scrollView.frame.size.width, (self.totalHeight + PADDING))];
 		
-		//NSLog(@"XXX scrollView contentSize: (%f, %f)", self.scrollView.contentSize.width, self.scrollView.contentSize.height);
 	}
 }
 
