@@ -86,7 +86,7 @@
 
 - (void)dialPhoneNumber  {
 	// As best I can tell, the format for the tel: scheme is tel:9-999-999-9999. But I can't tell if this is wrong, or
-	// if the simulator is just returning NO below because it doesn't support the scheme.
+	// if the simulator is just returning NO to -openURL: below because it doesn't support the scheme.
 	NSString *telStringConverted = [self.restaurant.telephone stringByReplacingOccurrencesOfString:@"(" withString:@""];
 	telStringConverted = [telStringConverted stringByReplacingOccurrencesOfString:@")" withString:@""];
 	telStringConverted = [telStringConverted stringByReplacingOccurrencesOfString:@" " withString:@"-"];

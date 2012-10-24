@@ -10,7 +10,7 @@
 #import "MBDetailViewController.h"
 #import "MBFactualRestaurant.h"
 
-static NSString *kFactualAPIKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
+static const NSString *kFactualAPIKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 
 @interface MBViewController () {
 }
@@ -19,14 +19,20 @@ static NSString *kFactualAPIKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 
 @implementation MBViewController
 
-//@synthesize cityStateTextField;
 
 - (void)viewDidLoad  {
 	[super viewDidLoad];
 	// Do any additional setup after loading the view, typically from a nib.
 	
 	self.locationManager = [[CLLocationManager alloc] init];
-	self.locationManager.delegate = self;
+	self.locationManager.delegate = self;	
+}
+
+// Deselect any table rows that are selected when the view displays (e.g. when navigating back from the detail view).
+// We don't get this for free because we're not just a UITableViewController subclass.
+- (void)viewWillAppear:(BOOL)animated  {
+	[super viewWillAppear:animated];
+	[self.tableView deselectRowAtIndexPath:[self.tableView indexPathForSelectedRow] animated:animated];
 }
 
 - (void)didReceiveMemoryWarning  {
@@ -37,9 +43,9 @@ static NSString *kFactualAPIKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 
 #pragma mark - Instance methods
 
+// Parse input from the two text fields (if needed, or use Location Services), and concatenate them into a URL to
+// query Factual with.
 - (void)performFactualRestaurantSearch  {
-	
-	//NSLog(@"XXX Got some text, %@ and %@", self.cityStateTextField.text, self.searchTermsTextField.text);
 	
 	// Construct the query URL. This all needs to be properly percent-escaped or NSURL won't take it, hence the multiple parts.
 	
@@ -48,36 +54,36 @@ static NSString *kFactualAPIKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 	NSString *requestStringEncoded;
 	
 	// Use Location Services data if it's enabled.
-	if (/*self.location*/ self.locationButton.selected) {
+	
+	if (self.locationButton.selected) {
 		NSString *requestCoordinates = [NSString stringWithFormat:@"geo={\"$circle\":{\"$center\":[%f,%f],\"$meters\":5000}}", self.location.coordinate.latitude, self.location.coordinate.longitude];
 		NSString *requestURLQueryEncoded = [requestURLQuery stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
 		NSString *requestCoordinatesEncoded = [requestCoordinates stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
 		
 		requestStringEncoded = [NSString stringWithFormat:@"%@%@&%@&KEY=%@", requestURLPrefix, requestURLQueryEncoded, requestCoordinatesEncoded, kFactualAPIKey];
 	} else  {
+		
 		// Otherwise, use input from the city / state text field.
 	
 		// Strip out periods from the input. Factual doesn't like them, and iOS autocorrects certain things to include periods, e.g. "Washington, D.C.".
 		NSString *cityStateText = [self.cityStateTextField.text stringByReplacingOccurrencesOfString:@"." withString:@""];
 		
 		// String processing for city, state location. First, try to get City, ST as comma-separated values.
-		
 		NSMutableString *locality = [NSMutableString stringWithFormat:@""];  // A nil string will print as "(null)"
 		NSString *region = @"";
 		
 		NSArray *locationComponents = [cityStateText componentsSeparatedByString:@", "];
-		// ...if there aren't any, try spaces...
+		
+		// If there aren't any commas, try checking for words separated by spaces.
 		if (locationComponents.count < 2) {
 			locationComponents = [cityStateText componentsSeparatedByString:@" "];
-			// ...if still not, just send the single string as "locality"...
+			// If there's still only one word found, just use that as the "locality" for Factual.
 			if (locationComponents.count < 2) {
 				locality = locationComponents[0];
-			} else if (locationComponents.count > 2) {  // ...otherwise, check for multiple spaces (multiple-word cities)...
-				region = locationComponents[locationComponents.count - 1];  // ...last string component from the end is the "region". This will not pick up multi-word states ("New Mexico") properly...
-				//locality = [locality mutableCopy];
+			} else if (locationComponents.count > 2) {  // Otherwise, check for multiple spaces (multiple-word cities).
+				region = locationComponents[locationComponents.count - 1];  // Last string component should be the state / "region".
 				for (int i=0; i < locationComponents.count - 1; i++) {
 					[locality appendFormat:@" %@", locationComponents[i]];
-					NSLog(@"XXX Locality is now %@", locality);
 				}
 				locality = (NSMutableString *)[locality stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
 			}  else {
@@ -88,9 +94,7 @@ static NSString *kFactualAPIKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 			locality = locationComponents[0];
 			region = locationComponents[1];
 		}
-		
-		//NSLog(@"XXX Locality = %@, Region = %@", locality, region);
-		
+				
 		NSString *requestURLFilters = [NSString stringWithFormat:@"filters={\"region\":\"%@\",\"locality\":\"%@\"}", region, locality];
 		
 		NSString *requestURLQueryEncoded = [requestURLQuery stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
@@ -99,19 +103,20 @@ static NSString *kFactualAPIKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 		requestStringEncoded = [NSString stringWithFormat:@"%@%@&%@&KEY=%@", requestURLPrefix, requestURLQueryEncoded, requestURLFiltersEncoded, kFactualAPIKey];
 		
 	}
-	
+
+	// Set up an asynchronous URL request, and initialize the NSMutableData object to start receiving the JSON data.
 	NSURLRequest *request = [NSURLRequest requestWithURL:[NSURL URLWithString:requestStringEncoded]];
 	self.connection = [NSURLConnection connectionWithRequest:request delegate:self];
 	
 	self.jsonData = [NSMutableData data];
 	
-	//NSLog(@"XXX Request string was: %@", requestStringEncoded);
 }
 
+// Parse the JSON return from Factual into an NSDictionary, create a MBFactualRestaurant object from each sub-dictionary
+// it contains, and add those new objects to the array that backs the table view.
 - (void)parseJSON  {
 	NSError *parseError = nil;
 	NSDictionary *factualResponse = [NSJSONSerialization JSONObjectWithData:self.jsonData options:0 error:&parseError];
-	//NSLog(@"XXX JSON -> NSDictionary: %@", factualResponse);
 	
 	if (!parseError) {
 		self.restaurants = [[NSMutableArray alloc] initWithCapacity:20];
@@ -119,7 +124,6 @@ static NSString *kFactualAPIKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 		for (NSDictionary *dict in [[factualResponse objectForKey:@"response"] objectForKey:@"data"]) {
 			MBFactualRestaurant *restaurant = [MBFactualRestaurant restaurantFromFactualDictionary:dict];
 			[self.restaurants addObject:restaurant];
-			//NSLog(@"XXX Just added %@", restaurant.name);
 		}
 	}
 	
@@ -136,13 +140,14 @@ static NSString *kFactualAPIKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 	}
 }
 
+// Flip Location services on or off, reset the text in the City, ST text field, and prepopulate it with the last known
+// location if we have one cached.
 - (IBAction)toggleLocationServices  {
 	self.locationButton.selected = !self.locationButton.selected;
 	self.cityStateTextField.text = @"";
 
 	if (self.locationButton.selected) {
 		[self.locationManager startMonitoringSignificantLocationChanges];
-		NSLog(@"XXX Starting up Location Services…");
 		self.cityStateTextField.enabled = NO;
 
 		// A bit of a hack, but since CLLocationManager doesn't fire its delegate method until the location has *changed*, continue to fill in the existing location if we already have one.
@@ -154,7 +159,6 @@ static NSString *kFactualAPIKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 		[self.locationManager stopMonitoringSignificantLocationChanges];
 		self.cityStateTextField.textColor = [UIColor darkTextColor];
 		self.cityStateTextField.enabled = YES;
-		//self.location = nil;
 	}
 }
 
@@ -187,7 +191,6 @@ static NSString *kFactualAPIKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 }
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection  {
-	//NSLog(@"I has a JSON: %@", self.jsonData);
 	[self parseJSON];
 }
 
@@ -225,14 +228,6 @@ static NSString *kFactualAPIKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 }
 
 
-#pragma mark - UITableViewDelegate methods
-
-/*
-- (void)tableView:(UITableView *)tableView didDeselectRowAtIndexPath:(NSIndexPath *)indexPath  {
-	UIStoryboard *storyboard = [UIStoryboard storyboardWithName:@"MainStoryboard" bundle:nil];
-	MBDetailViewController *detailViewController = [storyboard instantiateViewControllerWithIdentifier:@"detailViewController"];
-}
-*/
 #pragma mark - UIViewController override
 
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender  {
@@ -246,6 +241,7 @@ static NSString *kFactualAPIKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 
 #pragma mark - UITextViewDelegate methods
 
+// Run a search when the user press the "Search" key on the keyboard from within either of the two text fields.
 - (BOOL)textFieldShouldReturn:(UITextField *)textField  {
 	
 	[textField resignFirstResponder];
@@ -257,6 +253,7 @@ static NSString *kFactualAPIKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 
 #pragma mark - CLLocationManagerDelegate methods
 
+// When the location updates, cache it and fill in the City, ST text field with geocoded info from the current location.
 - (void)locationManager:(CLLocationManager *)manager didUpdateLocations:(NSArray *)locations  {
 	NSLog(@"XXX Updating location…");
 	self.location = (CLLocation *)locations[locations.count - 1];
@@ -272,6 +269,8 @@ static NSString *kFactualAPIKey = @"EsClMNOcpTnieYueu5igO44aUSX5kpPzFh0O4kId";
 	}];
 }
 
+// If the user turns off Location Services, stop trying to update location, clear any location info we have cached
+// and show an alert pointing them to Settings.app to turn it back on.
 - (void)locationManager:(CLLocationManager *)manager didFailWithError:(NSError *)error  {
 	if (error.code == kCLErrorDenied) {
 		[self.locationManager stopMonitoringSignificantLocationChanges];

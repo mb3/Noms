@@ -11,7 +11,7 @@
 
 @class MBDetailViewController;
 
-@interface MBViewController : UIViewController <UITextFieldDelegate, UITableViewDelegate, UITableViewDataSource, NSURLConnectionDelegate, NSURLConnectionDataDelegate, CLLocationManagerDelegate>
+@interface MBViewController : UIViewController <UITextFieldDelegate, UITableViewDataSource, NSURLConnectionDelegate, NSURLConnectionDataDelegate, CLLocationManagerDelegate>
 
 // Text field for the user to enter general search terms. This maps to Factual's free-text search ("q=" in the URL).
 @property (strong, nonatomic) IBOutlet UITextField *searchTermsTextField;
